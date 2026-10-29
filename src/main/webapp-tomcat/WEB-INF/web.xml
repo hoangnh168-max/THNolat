@@ -30,6 +30,12 @@
     	<param-value>org.olat.core.CoreSpringInitializer</param-value>
 	</context-param>
 
+	<!-- Disable CXF JaxrsServletContainerInitializer auto-discovery since we have explicit CXF servlet config -->
+	<context-param>
+		<param-name>org.apache.cxf.jaxrs.servlet.disableJaxrsServletContainerInitializer</param-name>
+		<param-value>true</param-value>
+	</context-param>
+
 	<!-- 2. Filters -->
 	<filter>
 		<filter-name>SameSiteSessionCookieFilter</filter-name>

@@ -42,18 +42,21 @@ import org.olat.core.util.StringHelper;
 import org.olat.core.util.UserSession;
 import org.olat.core.util.WebappHelper;
 import org.olat.core.util.i18n.I18nManager;
+import org.olat.dispatcher.LocaleNegotiator;
+
+import java.util.Locale;
 import org.olat.login.LoginEvent;
 import org.olat.login.LoginModule;
 import org.springframework.beans.factory.annotation.Autowired;
 
 /**
- * 
+ *
  * Initial date: 9 août 2023<br>
  * @author srosse, stephane.rosse@frentix.com, http://www.frentix.com
  *
  */
 public class OLATAuthenticationForm extends FormBasicController {
-	
+
 	private TextElement loginEl;
 	private TextElement passEl;
 	private FormLink backButton;
@@ -63,7 +66,7 @@ public class OLATAuthenticationForm extends FormBasicController {
 	private LoginModule loginModule;
 	@Autowired
 	private OLATAuthManager olatAuthenticationSpi;
-	
+
 	/**
 	 * Login form used by the OLAT Authentication Provider
 	 * @param name
@@ -78,26 +81,26 @@ public class OLATAuthenticationForm extends FormBasicController {
 	protected void initForm(FormItemContainer formLayout, Controller listener, UserRequest ureq) {
 		setFormTitle("login.form");
 		setFormDescription("login.intro");
-	
+
 		loginEl = uifactory.addTextElement(mainForm.getFormId() + "_name", "lf_login", "lf.login", 128, "", formLayout);
 		loginEl.setAutocomplete("username");
 		loginEl.setDisplaySize(20);
 		loginEl.setFocus(true);
-		
+
 		passEl  = uifactory.addPasswordElement(mainForm.getFormId() + "_pass", "lf_pass",  "lf.pass", 128, "", formLayout);
 		passEl.setAutocomplete("current-password");
 		passEl.setDisplaySize(20);
 		passEl.setVisible(false);
-		
+
 		loginButton = uifactory.addFormSubmitButton(mainForm.getFormId() + "_button", "login.button", "next", null, formLayout);
 		backButton = uifactory.addFormLink("back", formLayout, Link.BUTTON);
 		backButton.setVisible(false);
-		
+
 		// turn off the dirty message when leaving the login form without loggin in (e.g. pressing guest login)
 		flc.getRootForm().setHideDirtyMarkingMessage(true);
 		flc.getRootForm().setCsrfProtection(false);
 	}
-	
+
 	@Override
 	public boolean validateFormLogic(UserRequest ureq) {
 		boolean valid = true;
@@ -108,7 +111,7 @@ public class OLATAuthenticationForm extends FormBasicController {
 			valid = false;
 		}
 		valid &= !loginEl.isEmpty("lf.error.loginempty");
-		
+
 		passEl.clearError();
 		if(passEl.isVisible()) {
 			valid &= !passEl.isEmpty("lf.error.passempty");
@@ -124,7 +127,7 @@ public class OLATAuthenticationForm extends FormBasicController {
 			flc.getRootForm().submit(ureq);
 		}
 	}
-	
+
 	@Override
 	protected void formOK(UserRequest ureq) {
 		if(passEl.isVisible()) {
@@ -134,20 +137,20 @@ public class OLATAuthenticationForm extends FormBasicController {
 			fireEvent(ureq, new LoginEvent());
 		}
 	}
-	
+
 	private void doStart() {
 		clearError();
-		
+
 		loginEl.setEnabled(false);
 		passEl.setVisible(true);
 		passEl.setFocus(true);
 		loginButton.setI18nKey("login.button", null);
 		backButton.setVisible(true);
-		
-		Command focusCommand = FormJSHelper.getFormFocusCommand(flc.getRootForm().getFormName(), passEl.getForId());						
+
+		Command focusCommand = FormJSHelper.getFormFocusCommand(flc.getRootForm().getFormName(), passEl.getForId());
 		getWindowControl().getWindowBackOffice().sendCommandTo(focusCommand);
 	}
-	
+
 	private void doBack(UserRequest ureq) {
 		clearError();
 		loginEl.setEnabled(true);
@@ -159,12 +162,12 @@ public class OLATAuthenticationForm extends FormBasicController {
 		backButton.setVisible(false);
 		fireEvent(ureq, Event.BACK_EVENT);
 	}
-	
+
 	private void doLogin(UserRequest ureq) {
 		clearError();
-		
+
 		String login = loginEl.getValue();
-		String pass = passEl.getValue();	
+		String pass = passEl.getValue();
 		if (loginModule.isLoginBlocked(login)) {
 			// do not proceed when blocked
 			setError("login.blocked", loginModule.getAttackPreventionTimeoutMin().toString());
@@ -190,26 +193,35 @@ public class OLATAuthenticationForm extends FormBasicController {
 			}
 		} else {
 			try {
-				String language = authenticatedIdentity.getUser().getPreferences().getLanguage();
 				UserSession usess = ureq.getUserSession();
-				if(StringHelper.containsNonWhitespace(language)) {
-					usess.setLocale(I18nManager.getInstance().getLocaleOrDefault(language));
+				// Check if user explicitly selected a language on the login page (via LanguageChooserController)
+				Locale negotiatedLocale = (Locale) usess.getEntry(LocaleNegotiator.NEGOTIATED_LOCALE);
+				if (negotiatedLocale != null) {
+					// User made an explicit choice on the login page, respect it
+					usess.setLocale(negotiatedLocale);
+					// Also update the user's profile preference for future logins
+					authenticatedIdentity.getUser().getPreferences().setLanguage(negotiatedLocale.toString());
+				} else {
+					// No explicit choice, fall back to user's saved profile preference
+					String language = authenticatedIdentity.getUser().getPreferences().getLanguage();
+					if(StringHelper.containsNonWhitespace(language)) {
+						usess.setLocale(I18nManager.getInstance().getLocaleOrDefault(language));
+					}
 				}
 
-				
 			} catch (Exception e) {
 				logError("Cannot set the user language", e);
 			}
-			
+
 			loginModule.clearFailedLoginAttempts(login);
 			fireEvent(ureq, new AuthenticationEvent(authenticatedIdentity, BaseSecurityModule.getDefaultAuthProviderIdentifier()));
 		}
 	}
-	
+
 	private void clearError() {
 		flc.contextRemove("error");
 	}
-	
+
 	private void setError(String i18nKey, String... args) {
 		flc.contextPut("error", translate(i18nKey, args));
 	}

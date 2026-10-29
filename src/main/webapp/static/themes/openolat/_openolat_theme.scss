@@ -3,15 +3,15 @@
 	Only used in iframes content 
 */
 
- /* OpenOLAT logo in navbar */
+ /* fLMS logo in navbar */
 .o_navbar-brand {
 	/* width - height */
-	background-image: url("images/OpenOlat_Logo_RGB.svg");
-	background-position: -35px -62px;
-	background-size: 250px;
+	background-image: url("images/fLMS_Navbar_Logo.svg");
+	background-position: center;
+	background-size: contain;
 	background-repeat: no-repeat;
 	height: 50px;
-	width: 60px;
+	width: 200px;
 }
 
 /* Logo in member list print view */
