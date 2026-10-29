@@ -28,34 +28,37 @@ import org.springframework.web.context.ConfigurableWebApplicationContext;
 /**
  * Bootstrap the spring initialization to import some
  * specific configurations via import + placeholders
- * 
- * 
+ *
+ *
  * @author srosse, stepgane.rosse@frentix.com, http://www.frentix.com
  *
  */
 public class CoreSpringInitializer implements ApplicationContextInitializer<ConfigurableWebApplicationContext> {
-	
+
 	private static final Logger log = Tracing.createLoggerFor(CoreSpringInitializer.class);
 
 	@Override
 	public void initialize(ConfigurableWebApplicationContext ctx) {
-		//detect activemq
-		String jmsProvider;
-		try {
-			Class.forName("org.apache.activemq.artemis.jms.client.ActiveMQTopic");
-			jmsProvider = "activemq";
-		} catch (ClassNotFoundException e) {
-			jmsProvider = "jndi";
+		// Allow overriding jms.provider via system property for local development
+		String jmsProvider = System.getProperty("jms.provider");
+		if (jmsProvider == null) {
+			//detect activemq
+			try {
+				Class.forName("org.apache.activemq.artemis.jms.client.ActiveMQTopic");
+				jmsProvider = "activemq";
+			} catch (ClassNotFoundException e) {
+				jmsProvider = "jndi";
+			}
 		}
-  	
-		log.info("Bootstrapping spring startup");
+
+		log.info("Bootstrapping spring startup with jms.provider={}", jmsProvider);
 		PropertySource<String> ps = new OpenOLATProperties(jmsProvider);
 		ctx.getEnvironment().getPropertySources().addFirst(ps);
 	}
-	
+
 	private static class OpenOLATProperties extends PropertySource<String> {
 		private final String jmsProvider;
-		
+
 		public OpenOLATProperties(String jmsProvider) {
 			super("openOLATProperties");
 			this.jmsProvider = jmsProvider;
@@ -68,7 +71,6 @@ public class CoreSpringInitializer implements ApplicationContextInitializer<Conf
 			}
 			return null;
 		}
-		
+
 	}
 }
-

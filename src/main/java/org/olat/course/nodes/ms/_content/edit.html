@@ -1,0 +1,20 @@
+<fieldset class="o_sel_course_ms">
+	<legend>$r.contextHelpWithWrapper("manual_user/learningresources/Course_Element_Assessment/")
+	$r.translate("grading.configuration.title")</legend>
+	
+	#if ($hasAssessments)
+		#if ($isOverwriting)
+			<div class="o_warning_with_icon">
+				$r.translate("assessments.exist.warning")
+			</div>
+		#else
+			<div class="o_info_with_icon">
+				$r.translate("assessments.exist.info")
+			</div>
+			<div class="o_button_group">
+				$r.render("enable.editing")
+			</div>
+		#end
+	#end
+	$r.render("mseditform")
+</fieldset>

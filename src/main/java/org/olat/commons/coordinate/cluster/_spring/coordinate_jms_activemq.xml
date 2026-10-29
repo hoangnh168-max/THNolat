@@ -8,7 +8,7 @@
 	<bean id="EmbeddedActiveMQ" class="org.olat.commons.coordinate.cluster.jms.OpenOlatEmbeddedActiveMQ" init-method="start" destroy-method="stop">
 		<property name="jmsDir" value="${jms.dir}"/>
 		<property name="persistenceEnabled" value="${jms.persistence.enabled}"/>
-		<property name="configResourcePath" value="broker-oo.xml"/>
+		<property name="configResourcePath" value="classpath:broker-oo.xml"/>
 	</bean>
 
 	<bean id="sysbus.topic" class="org.apache.activemq.artemis.jms.client.ActiveMQTopic">

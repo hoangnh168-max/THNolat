@@ -50,6 +50,7 @@
 		<property name="jmsMsgDelayLimit"  value="5000" />
 	</bean>
 
-	<import resource="classpath:/org/olat/commons/coordinate/cluster/_spring/coordinate_jms_${jms.provider}.xml"/>
+	<!-- For local development with embedded ActiveMQ -->
+<import resource="classpath:/org/olat/commons/coordinate/cluster/_spring/coordinate_jms_activemq.xml"/>
 
 </beans>	
