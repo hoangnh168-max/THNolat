@@ -124,7 +124,7 @@ public class OrganisationServiceImpl implements OrganisationService, Initializin
 	public void afterPropertiesSet() throws Exception {
 		List<Organisation> defaultOrganisations = organisationDao.loadDefaultOrganisation();
 		if(defaultOrganisations.isEmpty()) {
-			Organisation organisation = organisationDao.create("OpenOLAT", DEFAULT_ORGANISATION_IDENTIFIER, null, null, null);
+			Organisation organisation = organisationDao.create("FSC-THN", DEFAULT_ORGANISATION_IDENTIFIER, null, null, null);
 			organisation.setManagedFlags(new OrganisationManagedFlag[] {
 					OrganisationManagedFlag.identifier, OrganisationManagedFlag.externalId,
 					OrganisationManagedFlag.move, OrganisationManagedFlag.delete
@@ -640,7 +640,12 @@ public class OrganisationServiceImpl implements OrganisationService, Initializin
 		if(organisationRoles == null || organisationRoles.length == 0 || organisationRoles[0] == null) {
 			return Collections.emptyList();
 		}
-		
+
+		// If user is sysadmin, return all organisations
+		if(roles.isSystemAdmin()) {
+			return getOrganisations();
+		}
+
 		Set<OrganisationRef> organisations = new HashSet<>();
 		for(OrganisationRoles organisationRole:organisationRoles) {
 			if(organisationRole != null) {
